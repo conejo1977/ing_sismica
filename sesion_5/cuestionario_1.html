@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casos de Razonamiento · Ingeniería Sísmica</title>
+<style>
+  :root{
+    --primary:#7a0e1e;
+    --primary-dark:#5a0a16;
+    --accent:#d4af37;
+    --bg:#f0f2f5;
+    --card:#ffffff;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --correct:#15803d;
+    --correct-bg:#dcfce7;
+    --incorrect:#b91c1c;
+    --incorrect-bg:#fee2e2;
+    --border:#e5e7eb;
+    --info:#1e40af;
+    --info-bg:#dbeafe;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+    padding:20px;
+  }
+  .container{max-width:960px;margin:0 auto;}
+
+  header.quiz-header{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+    color:#fff;
+    padding:34px 28px;
+    border-radius:16px;
+    margin-bottom:20px;
+    box-shadow:0 10px 30px rgba(122,14,30,.25);
+    position:relative;
+    overflow:hidden;
+  }
+  header.quiz-header::after{
+    content:'';position:absolute;right:-40px;top:-40px;
+    width:200px;height:200px;border-radius:50%;
+    background:rgba(255,255,255,.06);
+  }
+  header.quiz-header::before{
+    content:'';position:absolute;right:60px;bottom:-70px;
+    width:140px;height:140px;border-radius:50%;
+    background:rgba(255,255,255,.05);
+  }
+  header.quiz-header h1{font-size:1.5rem;margin-bottom:6px;letter-spacing:-.3px;position:relative;}
+  header.quiz-header p{font-size:.92rem;opacity:.92;position:relative;}
+
+  .stats-bar{
+    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;
+  }
+  .stat-chip{
+    background:#fff;border:1px solid var(--border);
+    padding:8px 14px;border-radius:10px;font-size:.8rem;
+    color:var(--muted);font-weight:600;
+    display:flex;align-items:center;gap:6px;
+  }
+  .stat-chip b{color:var(--primary);font-size:1rem;}
+
+  .progress-wrap{
+    background:var(--border);
+    height:10px;
+    border-radius:5px;
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .progress-fill{
+    background:linear-gradient(90deg,var(--primary),var(--accent));
+    height:100%;width:0%;
+    transition:width .4s ease;
+    border-radius:5px;
+  }
+  .progress-text{
+    text-align:right;
+    font-size:.78rem;
+    color:var(--muted);
+    margin-bottom:18px;
+    font-weight:600;
+  }
+
+  .case-card{
+    background:var(--card);
+    border-radius:16px;
+    padding:26px;
+    margin-bottom:20px;
+    box-shadow:0 2px 14px rgba(0,0,0,.07);
+    border-top:5px solid var(--primary);
+    transition:box-shadow .3s ease;
+    position:relative;
+  }
+  .case-card:hover{box-shadow:0 8px 26px rgba(0,0,0,.12);}
+  .case-card.hidden{display:none;}
+
+  .case-number{
+    position:absolute;top:-14px;left:24px;
+    background:var(--primary);color:#fff;
+    font-size:.72rem;font-weight:800;letter-spacing:1px;
+    padding:5px 14px;border-radius:20px;
+    text-transform:uppercase;
+  }
+
+  .case-title{
+    font-size:1.08rem;font-weight:700;color:var(--primary-dark);
+    margin:6px 0 12px;
+  }
+
+  .case-context{
+    background:linear-gradient(135deg,#fef9f3 0%,#fdf5e8 100%);
+    border-left:4px solid var(--accent);
+    padding:16px 18px;
+    border-radius:8px;
+    font-size:.92rem;
+    color:#4b5563;
+    margin-bottom:16px;
+    line-height:1.6;
+  }
+  .case-context strong{color:#78350f;}
+
+  .case-data{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
+    margin:14px 0;
+  }
+  .data-box{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:12px;
+    text-align:center;
+  }
+  .data-box .label{
+    font-size:.72rem;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .data-box .value{
+    font-size:1.15rem;
+    font-weight:800;
+    color:var(--primary);
+  }
+  .data-box .unit{
+    font-size:.72rem;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  .case-question{
+    font-weight:700;
+    font-size:1rem;
+    margin:16px 0 14px;
+    color:#111827;
+    padding-left:12px;
+    border-left:3px solid var(--primary);
+  }
+
+  .options{display:flex;flex-direction:column;gap:9px;}
+
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:12px 15px;
+    border:2px solid var(--border);
+    border-radius:10px;
+    cursor:pointer;
+    transition:all .2s ease;
+    background:#fff;
+    font-size:.92rem;
+    user-select:none;
+  }
+  .option:hover:not(.locked){
+    border-color:var(--primary);
+    background:#fdf5f6;
+    transform:translateX(3px);
+  }
+  .radio-circle{
+    width:20px;height:20px;min-width:20px;
+    border:2px solid #cbd5e1;
+    border-radius:50%;
+    margin-top:2px;
+    position:relative;
+    transition:all .2s ease;
+    flex-shrink:0;
+  }
+  .option.selected .radio-circle{
+    border-color:var(--primary);
+    background:var(--primary);
+  }
+  .option.selected .radio-circle::after{
+    content:'';position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:8px;height:8px;background:#fff;border-radius:50%;
+  }
+  .option.correct{
+    border-color:var(--correct);
+    background:var(--correct-bg);
+  }
+  .option.correct .radio-circle{
+    border-color:var(--correct);
+    background:var(--correct);
+  }
+  .option.correct .radio-circle::after{
+    content:'✓';position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-52%);
+    color:#fff;font-size:13px;font-weight:900;line-height:1;
+  }
+  .option.incorrect{
+    border-color:var(--incorrect);
+    background:var(--incorrect-bg);
+  }
+  .option.incorrect .radio-circle{
+    border-color:var(--incorrect);
+    background:var(--incorrect);
+  }
+  .option.incorrect .radio-circle::after{
+    content:'✕';position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-52%);
+    color:#fff;font-size:12px;font-weight:900;line-height:1;
+  }
+  .option.locked{cursor:default;}
+
+  .feedback{
+    margin-top:16px;
+    padding:16px 18px;
+    border-radius:10px;
+    font-size:.9rem;
+    display:none;
+    animation:fadeIn .35s ease;
+    line-height:1.6;
+  }
+  .feedback.show{display:block;}
+  .feedback.correct{
+    background:var(--correct-bg);
+    border-left:4px solid var(--correct);
+    color:#14532d;
+  }
+  .feedback.incorrect{
+    background:var(--incorrect-bg);
+    border-left:4px solid var(--incorrect);
+    color:#7f1d1d;
+  }
+  .feedback strong{display:block;margin-bottom:8px;font-size:.95rem;}
+
+  .feedback .step{
+    display:block;
+    margin-top:6px;
+    padding-left:12px;
+    border-left:2px solid rgba(0,0,0,.15);
+    font-size:.87rem;
+  }
+
+  @keyframes fadeIn{
+    from{opacity:0;transform:translateY(-6px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .actions{
+    display:flex;gap:12px;flex-wrap:wrap;
+    margin-top:26px;justify-content:center;
+  }
+  button{
+    font-family:inherit;font-size:.95rem;font-weight:600;
+    padding:12px 26px;border-radius:10px;border:none;
+    cursor:pointer;transition:all .2s ease;
+  }
+  .btn-secondary{
+    background:#fff;color:var(--primary);
+    border:2px solid var(--primary);
+  }
+  .btn-secondary:hover{
+    background:#fdf5f6;transform:translateY(-2px);
+  }
+
+  .score-panel{
+    margin-top:26px;padding:30px 24px;border-radius:16px;
+    background:linear-gradient(135deg,#1f2937 0%,#374151 100%);
+    color:#fff;text-align:center;display:none;
+    animation:fadeIn .5s ease;
+    box-shadow:0 12px 30px rgba(0,0,0,.2);
+  }
+  .score-panel.show{display:block;}
+  .score-panel h2{font-size:1.2rem;margin-bottom:6px;font-weight:600;opacity:.9;}
+  .score-number{
+    font-size:3.6rem;font-weight:800;color:var(--accent);
+    line-height:1;margin:12px 0;letter-spacing:-2px;
+  }
+  .score-number span{font-size:1.3rem;color:#9ca3af;font-weight:500;letter-spacing:0;}
+  .score-message{font-size:.95rem;opacity:.9;margin-top:8px;}
+  .score-bar{
+    height:8px;background:rgba(255,255,255,.15);
+    border-radius:4px;overflow:hidden;margin:18px auto 0;max-width:340px;
+  }
+  .score-bar-fill{
+    height:100%;background:linear-gradient(90deg,var(--accent),#f59e0b);
+    border-radius:4px;width:0%;transition:width .8s ease;
+  }
+
+  @media (max-width:600px){
+    body{padding:12px;}
+    header.quiz-header{padding:24px 18px;}
+    header.quiz-header h1{font-size:1.18rem;}
+    .case-card{padding:20px;}
+    .case-question{font-size:.95rem;}
+    .option{font-size:.88rem;padding:10px 12px;}
+    .case-number{left:16px;font-size:.68rem;padding:4px 10px;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="quiz-header">
+    <h1>🧩 Casos de Razonamiento · Ingeniería Sísmica</h1>
+    <p>Escenarios reales que exigen análisis, cálculo e interpretación tectónica — no solo memorización</p>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-chip">📋 Total de casos: <b id="statTotal">0</b></div>
+    <div class="stat-chip">✅ Correctos: <b id="statCorrect">0</b></div>
+    <div class="stat-chip">📊 Precisión: <b id="statPct">0%</b></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-text" id="progressText">0 de 0 casos resueltos</div>
+
+  <div id="quiz"></div>
+
+  <div class="actions">
+    <button class="btn-secondary" onclick="resetQuiz()">↺ Reiniciar todos los casos</button>
+  </div>
+
+  <div class="score-panel" id="scorePanel">
+    <h2>Resultado final de los casos</h2>
+    <div class="score-number" id="scoreNumber">0<span>/0</span></div>
+    <div class="score-bar"><div class="score-bar-fill" id="scoreBarFill"></div></div>
+    <div class="score-message" id="scoreMessage"></div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   BANCO DE CASOS DE RAZONAMIENTO
+   ============================================================ */
+const cases = [
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 1 · Sismograma: identificar el más lejano
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El sismograma que nadie entendía',
+  context:'Cuatro estaciones sismológicas registraron el mismo sismo en la región San Martín. El equipo técnico debe determinar cuál estación está <strong>más lejos</strong> del epicentro para priorizar la alerta temprana. Los registros muestran los siguientes tiempos de llegada de las ondas P y S:',
+  data:[
+    {label:'Estación A', value:'P: 12 s', unit:'S: 30 s'},
+    {label:'Estación B', value:'P: 22 s', unit:'S: 50 s'},
+    {label:'Estación C', value:'P: 35 s', unit:'S: 78 s'},
+    {label:'Estación D', value:'P: 8 s', unit:'S: 20 s'},
+  ],
+  question:'¿Cuál estación se encuentra más lejos del epicentro?',
+  options:[
+    'Estación A, porque registra primero la onda P.',
+    'Estación C, porque tiene la mayor diferencia de tiempo entre la onda P y la onda S (43 s).',
+    'Estación D, porque registra las ondas más temprano.',
+    'No se puede determinar sin conocer la magnitud del sismo.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento paso a paso:</strong>
+    <span class="step">1. La distancia epicentral es proporcional al intervalo P–S (Δt = tS − tP).</span>
+    <span class="step">2. Calculamos: A → 18 s | B → 28 s | C → 43 s | D → 12 s.</span>
+    <span class="step">3. La estación con mayor Δt es C (43 s), por lo tanto es la más lejana.</span>
+    <span class="step">4. Aplicando D ≈ Δt × 8 km/s: A ≈ 144 km, B ≈ 224 km, C ≈ 344 km, D ≈ 96 km.</span>
+    <span class="step"><strong>Conclusión:</strong> la Estación C es la más distante del epicentro. El registro temprano de la onda P (opción A y D) solo indica que la onda llegó antes, no que estén más lejos.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 2 · Ingeniero en San Martín: ¿falla o subducción?
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El ingeniero escéptico de Tarapoto',
+  context:'Un ingeniero civil evalúa un proyecto de edificación en Tarapoto (región San Martín). En el mapa de sismicidad observa que el epicentro de un sismo reciente de Mw 5.2 se ubica a 8 km de la obra. En el mapa geológico local <strong>no aparece ninguna falla cartografiada</strong> cerca de ese punto. El hipocentro del sismo fue calculado a 110 km de profundidad. Un colega afirma que el proyecto es seguro porque "no hay falla debajo".',
+  data:[
+    {label:'Magnitud', value:'Mw 5.2', unit:'moderado'},
+    {label:'Profundidad', value:'110 km', unit:'hipocentro'},
+    {label:'Distancia', value:'8 km', unit:'al epicentro'},
+    {label:'Fallas cartografiadas', value:'Ninguna', unit:'en superficie'},
+  ],
+  question:'¿Cuál es la interpretación técnica más correcta que debe dar el ingeniero?',
+  options:[
+    'El proyecto es seguro porque no hay falla cartografiada debajo del epicentro.',
+    'El sismo se originó dentro de la placa de Nazca en subducción (sismo intraplaca); la ausencia de falla superficial no implica ausencia de amenaza sísmica.',
+    'El sismo fue inducido por actividad humana, por lo que no volverá a ocurrir.',
+    'La profundidad de 110 km hace imposible que el sismo se haya sentido en Tarapoto.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. En San Martín, la placa de Nazca subduce por debajo de la placa Sudamericana.</span>
+    <span class="step">2. Un hipocentro a 110 km de profundidad corresponde a un sismo intraplaca (dentro de la placa de Nazca en subducción), no a una falla superficial.</span>
+    <span class="step">3. La ausencia de falla cartografiada en superficie NO significa ausencia de amenaza: el sismo puede originarse a profundidad.</span>
+    <span class="step">4. Aunque el sismo sea profundo, puede sentirse en superficie (con menor intensidad), y debe considerarse en el diseño sismorresistente.</span>
+    <span class="step"><strong>Conclusión:</strong> el colega comete un error conceptual. La amenaza sísmica en San Martín no depende solo de fallas superficiales, sino del contexto de subducción.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 3 · Comparación de energía entre dos sismos
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El presupuesto del hospital',
+  context:'Una municipalidad debe decidir qué norma sismorresistente aplicar para un hospital en una zona del norte peruano. Los estudios de peligro sísmico indican que puede ocurrir un sismo de Mw 7.5. Un funcionario argumenta que, como el último sismo fue de Mw 6.5, "solo es un poquito más grande" y no justifica reforzar tanto la estructura.',
+  data:[
+    {label:'Sismo histórico', value:'Mw 6.5', unit:'referencia'},
+    {label:'Sismo de diseño', value:'Mw 7.5', unit:'posible'},
+    {label:'Diferencia', value:'1.0', unit:'unidad de magnitud'},
+  ],
+  question:'¿Qué argumento técnico debe usar el ingeniero para rebatir al funcionario?',
+  options:[
+    'Que un sismo Mw 7.5 libera aproximadamente 31.6 veces más energía que uno Mw 6.5, por lo que el diseño debe ser mucho más exigente.',
+    'Que la diferencia es insignificante porque la escala es lineal.',
+    'Que la energía liberada es la misma, solo cambia la amplitud.',
+    'Que un sismo Mw 7.5 solo es 1.5 veces más grande que uno Mw 6.5.'
+  ],
+  correct:0,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La escala de magnitud es logarítmica, no lineal.</span>
+    <span class="step">2. Un incremento de 1 unidad de magnitud equivale a ≈ 31.6 veces más energía liberada.</span>
+    <span class="step">3. Por lo tanto, Mw 7.5 libera ~31.6 veces más energía que Mw 6.5.</span>
+    <span class="step">4. Ese incremento energético se traduce en mayores aceleraciones, mayores desplazamientos y mayor demanda estructural.</span>
+    <span class="step"><strong>Conclusión:</strong> el argumento del funcionario es incorrecto. El diseño sismorresistente debe basarse en el peor escenario creíble, no en la diferencia numérica aparente.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 4 · Intensidad Mercalli vs magnitud
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'Dos ciudades, un mismo sismo',
+  context:'Ocurre un sismo de Mw 6.8 con epicentro frente a la costa de Lima, a 60 km de profundidad. La ciudad de Lima reporta intensidad VI en la escala de Mercalli Modificada. La ciudad de Huancayo, ubicada a mayor distancia epicentral pero sobre suelos blandos de valle, reporta intensidad V. En cambio, un distrito de Lima construido sobre relleno sanitario reporta intensidad VII, con daños en viviendas autoconstruidas.',
+  data:[
+    {label:'Magnitud', value:'Mw 6.8', unit:'única'},
+    {label:'Profundidad', value:'60 km', unit:'intermedia'},
+    {label:'Lima (centro)', value:'Int. VI', unit:'suelo firme'},
+    {label:'Distrito (relleno)', value:'Int. VII', unit:'suelo blando'},
+  ],
+  question:'¿Por qué el distrito sobre relleno sanitario reportó mayor intensidad que el centro de Lima, si están a distancia similar del epicentro?',
+  options:[
+    'Porque en ese distrito ocurrió un sismo diferente de mayor magnitud.',
+    'Porque las condiciones locales del suelo (efecto de sitio) amplifican las ondas sísmicas, aumentando la intensidad percibida y los daños.',
+    'Porque la escala de Mercalli mide la energía liberada en el foco.',
+    'Porque la magnitud del sismo cambia según la ciudad donde se mida.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La magnitud es única para todo el sismo (Mw 6.8); no cambia de una ciudad a otra.</span>
+    <span class="step">2. La intensidad (Mercalli) describe los efectos en un lugar específico y depende de varios factores.</span>
+    <span class="step">3. Uno de los factores más importantes es el efecto de sitio: suelos blandos (relleno, arena suelta, arcillas) amplifican las ondas sísmicas.</span>
+    <span class="step">4. Por eso, un mismo sismo puede causar daños severos en un distrito y daños leves en otro, incluso a distancias similares.</span>
+    <span class="step"><strong>Conclusión:</strong> el suelo blando amplificó el movimiento, elevando la intensidad a VII. Esto es crucial en ingeniería civil para el diseño de cimentaciones.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 5 · Triangulación con tres estaciones
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'Localizando el epicentro',
+  context:'El Centro Sismológico Nacional recibió registros de tres estaciones para un sismo ocurrido en la selva peruana. Aplicando el modelo D ≈ Δt(P–S) × 8 km/s, los técnicos calcularon las siguientes distancias al epicentro:',
+  data:[
+    {label:'Estación Iquitos', value:'D₁ = 160 km', unit:'norte'},
+    {label:'Estación Pucallpa', value:'D₂ = 240 km', unit:'centro'},
+    {label:'Estación Tarapoto', value:'D₃ = 120 km', unit:'sur'},
+  ],
+  question:'¿Cómo determinan los técnicos la posición del epicentro con estos datos?',
+  options:[
+    'Sumando las tres distancias y dividiéndolas entre 3.',
+    'Trazando tres circunferencias con radios D₁, D₂ y D₃ desde cada estación; el punto donde las tres se intersectan es el epicentro.',
+    'Usando solo la estación con mayor distancia.',
+    'Promediando las coordenadas geográficas de las tres estaciones.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Cada estación define una circunferencia de radio igual a su distancia calculada al epicentro.</span>
+    <span class="step">2. Con una sola estación, el epicentro puede estar en cualquier punto de esa circunferencia.</span>
+    <span class="step">3. Con dos estaciones, se reduce a dos posibles intersecciones.</span>
+    <span class="step">4. Con tres estaciones, las tres circunferencias se intersectan en un único punto: el epicentro.</span>
+    <span class="step"><strong>Conclusión:</strong> el método se llama triangulación. Es la base para localizar epicentros con redes sismológicas.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 6 · Llegada de ondas en un sismograma real
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'Interpretando el sismograma',
+  context:'Un analista del IGP observa el registro de una estación sísmica. Identifica la primera perturbación a los 20 s (onda P), una segunda fase a los 55 s (onda S) y una fase final de gran amplitud a los 80 s. El sismograma muestra que la amplitud máxima del registro ocurre durante la fase final.',
+  data:[
+    {label:'Llegada onda P', value:'20 s', unit:'primera fase'},
+    {label:'Llegada onda S', value:'55 s', unit:'segunda fase'},
+    {label:'Fase final', value:'80 s', unit:'mayor amplitud'},
+  ],
+  question:'¿Qué tipo de ondas corresponden a la fase final de 80 s y por qué generan la mayor amplitud?',
+  options:[
+    'Son ondas P reflejadas, porque son las más rápidas.',
+    'Son ondas superficiales (Love y Rayleigh), cuya amplitud es mayor cerca de la superficie y generan los mayores daños.',
+    'Son ondas S que se reflejan en el núcleo.',
+    'Son réplicas del sismo principal.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La onda P llega primero (20 s) por ser la más rápida.</span>
+    <span class="step">2. La onda S llega después (55 s) porque es más lenta.</span>
+    <span class="step">3. Las ondas superficiales (Love y Rayleigh) llegan al final porque son las más lentas, pero su amplitud es mayor cerca de la superficie.</span>
+    <span class="step">4. Por eso la fase final (80 s) concentra la mayor amplitud y el mayor potencial de daño.</span>
+    <span class="step"><strong>Conclusión:</strong> en ingeniería civil, las ondas superficiales son críticas porque generan las mayores demandas sobre las estructuras.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 7 · Falla geológica vs sismicidad en San Martín
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El misterio del sector suroccidental',
+  context:'Un geólogo analiza el mapa de sismicidad de San Martín. Observa que el sector suroccidental tiene una densidad muy alta de fallas geológicas cartografiadas (líneas rojas), pero muy pocos epicentros registrados. En cambio, el sector central y oriental tiene menor densidad de fallas, pero concentra la mayoría de los sismos. Un estudiante concluye que "los mapas están mal hechos".',
+  data:[
+    {label:'Fallas (SO)', value:'Alta', unit:'densidad'},
+    {label:'Sismos (SO)', value:'Baja', unit:'densidad'},
+    {label:'Fallas (centro)', value:'Media', unit:'densidad'},
+    {label:'Sismos (centro)', value:'Alta', unit:'densidad'},
+  ],
+  question:'¿Cuál es la interpretación correcta de esta aparente contradicción?',
+  options:[
+    'El estudiante tiene razón: los mapas están mal elaborados.',
+    'La sismicidad responde a un contexto tectónico más complejo: muchos sismos se originan en profundidad dentro de la placa de Nazca, no necesariamente en fallas superficiales cartografiadas.',
+    'Las fallas del sector suroccidental son inactivas y nunca generarán sismos.',
+    'Los sismos solo ocurren donde hay mayor densidad de fallas cartografiadas.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Las fallas cartografiadas representan estructuras en superficie, no necesariamente la fuente de todos los sismos.</span>
+    <span class="step">2. Muchos sismos en San Martín se originan dentro de la placa de Nazca en subducción (sismos intraplaca), a profundidades de 50–150 km.</span>
+    <span class="step">3. Por eso puede haber alta densidad de fallas sin alta sismicidad registrada, y viceversa.</span>
+    <span class="step">4. La distribución de la sismicidad responde a un contexto tectónico complejo (subducción + fallas corticales + deformación intraplaca).</span>
+    <span class="step"><strong>Conclusión:</strong> la densidad de fallas superficiales no determina por sí sola la distribución de los sismos. El análisis debe integrar la profundidad del hipocentro y el contexto tectónico.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 8 · Decisión de cimentación según profundidad
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'La decisión del cimiento',
+  context:'Dos proyectos de edificación se ubican en la misma ciudad de la selva peruana. El suelo es similar en ambos casos (arcillas blandas). El proyecto A está a 15 km del epicentro de un sismo superficial (10 km de profundidad). El proyecto B está a 15 km del epicentro de un sismo profundo (120 km de profundidad). Ambos sismos tienen Mw 5.5.',
+  data:[
+    {label:'Proyecto A', value:'Sismo superficial', unit:'10 km prof.'},
+    {label:'Proyecto B', value:'Sismo profundo', unit:'120 km prof.'},
+    {label:'Distancia', value:'15 km', unit:'al epicentro'},
+    {label:'Magnitud', value:'Mw 5.5', unit:'ambos'},
+  ],
+  question:'¿Cuál proyecto sentirá con mayor intensidad el sismo y por qué?',
+  options:[
+    'El proyecto B, porque el sismo es más profundo y las ondas viajan más.',
+    'El proyecto A, porque un sismo superficial libera su energía más cerca de la superficie, generando mayor sacudida.',
+    'Ambos por igual, porque la distancia al epicentro y la magnitud son idénticas.',
+    'El proyecto B, porque la profundidad aumenta la magnitud.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La magnitud es la misma (Mw 5.5) y la distancia epicentral también (15 km).</span>
+    <span class="step">2. Pero la profundidad del hipocentro es muy diferente: 10 km vs 120 km.</span>
+    <span class="step">3. Un sismo superficial libera su energía cerca de la superficie, por lo que la sacudida es más intensa.</span>
+    <span class="step">4. Un sismo profundo atenúa más su energía antes de llegar a la superficie.</span>
+    <span class="step"><strong>Conclusión:</strong> el Proyecto A (sismo superficial) sentirá mayor intensidad, aunque ambos tengan la misma magnitud y distancia epicentral. La profundidad es un factor clave.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 9 · Selección de norma sísmica
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'La norma correcta para la costa peruana',
+  context:'Una empresa constructora debe edificar en la costa peruana, en una zona donde históricamente han ocurrido sismos de subducción (interplaca) de magnitud Mw 8.0+ con intervalos de ~100 años. El último gran sismo ocurrió hace 80 años. Un ingeniero propone usar una norma diseñada para sismos corticales superficiales de magnitud moderada, argumentando que "los sismos de subducción son más profundos y menos dañinos".',
+  data:[
+    {label:'Contexto', value:'Subducción', unit:'Nazca/Sudam.'},
+    {label:'Magnitud esperada', value:'Mw 8.0+', unit:'interplaca'},
+    {label:'Silencio sísmico', value:'80 años', unit:'desde último'},
+    {label:'Norma propuesta', value:'Cortical', unit:'incorrecta'},
+  ],
+  question:'¿Por qué es técnicamente incorrecta la propuesta del ingeniero?',
+  options:[
+    'Porque los sismos de subducción son siempre más peligrosos que los corticales, sin excepción.',
+    'Porque el contexto de subducción peruano genera sismos de gran magnitud y amplia duración que producen movimientos intensos y sostenidos, y la norma debe reflejar ese escenario.',
+    'Porque los sismos corticales no existen en el Perú.',
+    'Porque la norma propuesta no existe.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La costa peruana está en una zona de subducción activa (placa de Nazca bajo Sudamericana).</span>
+    <span class="step">2. Los sismos interplaca de subducción pueden alcanzar Mw 8.0+ y generar movimientos largos y de gran amplitud.</span>
+    <span class="step">3. El silencio sísmico de 80 años indica alta probabilidad de un sismo mayor pronto.</span>
+    <span class="step">4. Usar una norma para sismos corticales moderados subestimaría la amenaza real.</span>
+    <span class="step"><strong>Conclusión:</strong> la norma debe basarse en el peor escenario creíble, que en la costa peruana es un sismo de subducción de gran magnitud. La profundidad no hace automáticamente menos dañino un sismo: depende de magnitud, distancia y duración.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 10 · Interpretación de datos del IGP
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El reporte sísmico del IGP',
+  context:'El IGP emite el siguiente reporte: "Sismo de Mw 5.8, profundidad 95 km, epicentro a 30 km al NE de Moyobamba. Intensidad máxima reportada: IV en Moyobamba, III en Tarapoto." Un periodista pregunta: "¿Por qué si fue Mw 5.8 no se sintió más fuerte en Moyobamba?"',
+  data:[
+    {label:'Magnitud', value:'Mw 5.8', unit:'moderado'},
+    {label:'Profundidad', value:'95 km', unit:'intermedia'},
+    {label:'Int. Moyobamba', value:'IV', unit:'ligera'},
+    {label:'Int. Tarapoto', value:'III', unit:'débil'},
+  ],
+  question:'¿Cuál es la respuesta técnica correcta del sismólogo?',
+  options:[
+    'Porque la magnitud reportada está mal calculada.',
+    'Porque un sismo de magnitud moderada pero profundidad intermedia (95 km) atenúa su energía antes de llegar a superficie, generando intensidades bajas.',
+    'Porque Moyobamba está muy lejos del epicentro.',
+    'Porque la escala de Mercalli siempre subestima los sismos profundos.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La magnitud Mw 5.8 es moderada, no extrema.</span>
+    <span class="step">2. El hipocentro está a 95 km de profundidad (sismo intermedio).</span>
+    <span class="step">3. A mayor profundidad, mayor atenuación de las ondas antes de llegar a la superficie.</span>
+    <span class="step">4. Por eso, aunque Moyobamba esté cerca del epicentro (30 km), la intensidad es solo IV.</span>
+    <span class="step"><strong>Conclusión:</strong> la intensidad depende de la magnitud, la profundidad, la distancia y el suelo. Un sismo moderado y profundo puede sentirse suave en superficie.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 11 · Cálculo del intervalo P-S en una estación
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El cálculo del técnico',
+  context:'Un técnico del Centro Sismológico Nacional recibe el registro de una estación. En el sismograma identifica la llegada de la onda P a los 42 s y la llegada de la onda S a los 77 s. Debe calcular la distancia epicentral usando el modelo D ≈ Δt(P–S) × 8 km/s.',
+  data:[
+    {label:'Llegada onda P', value:'42 s', unit:'registro'},
+    {label:'Llegada onda S', value:'77 s', unit:'registro'},
+    {label:'Modelo', value:'D ≈ Δt × 8', unit:'km/s'},
+  ],
+  question:'¿Cuál es la distancia epicentral aproximada que debe reportar el técnico?',
+  options:[
+    '280 km.',
+    '340 km.',
+    '77 km.',
+    '420 km.'
+  ],
+  correct:0,
+  explanation:`<strong>Razonamiento paso a paso:</strong>
+    <span class="step">1. Δt(P–S) = tS − tP = 77 s − 42 s = 35 s.</span>
+    <span class="step">2. Aplicamos el modelo: D ≈ Δt × 8 km/s = 35 s × 8 km/s.</span>
+    <span class="step">3. D ≈ 280 km.</span>
+    <span class="step"><strong>Conclusión:</strong> la distancia epicentral aproximada es 280 km. El factor 8 km/s proviene de velocidades típicas Vp ≈ 6 km/s y Vs ≈ 3.4 km/s.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 12 · Efecto de sitio en edificaciones
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'Dos edificios, un mismo sismo',
+  context:'Ocurre un sismo de Mw 6.5 en la costa peruana. Dos edificios de similar altura y sistema estructural se ubican en la misma ciudad. El edificio X está sobre suelo rocoso (grava compacta). El edificio Y está sobre suelo blando (arcilla de alta plasticidad). Tras el sismo, el edificio X no presenta daños, mientras que el edificio Y muestra fisuras en columnas y muros.',
+  data:[
+    {label:'Sismo', value:'Mw 6.5', unit:'único'},
+    {label:'Edificio X', value:'Suelo rocoso', unit:'sin daños'},
+    {label:'Edificio Y', value:'Suelo blando', unit:'con daños'},
+  ],
+  question:'¿Cuál es la explicación técnica más probable del daño diferenciado?',
+  options:[
+    'El edificio Y fue construido con materiales de menor calidad.',
+    'El suelo blando amplificó las ondas sísmicas (efecto de sitio), generando mayores demandas sobre el edificio Y.',
+    'El edificio X tiene mejor diseño estructural.',
+    'El edificio Y estaba más cerca del epicentro.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Ambos edificios son similares y están en la misma ciudad, por lo que la diferencia no es estructural ni de distancia.</span>
+    <span class="step">2. La diferencia está en el suelo de cimentación.</span>
+    <span class="step">3. Los suelos blandos amplifican las ondas sísmicas (especialmente las de baja frecuencia), fenómeno conocido como efecto de sitio.</span>
+    <span class="step">4. Esa amplificación genera mayores aceleraciones y desplazamientos, que se traducen en mayores demandas sobre la estructura.</span>
+    <span class="step"><strong>Conclusión:</strong> el efecto de sitio es un factor crítico en el diseño sismorresistente. No basta con diseñar bien la estructura: hay que caracterizar el suelo.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 13 · Análisis de falla en la región San Martín
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'La falla activa de Moyobamba',
+  context:'Un estudio geológico reciente identifica una falla inversa de rumbo NE-SO en las cercanías de Moyobamba. La falla tiene evidencias de actividad cuaternaria (últimos 2.6 millones de años). En los últimos 30 años se han registrado 4 sismos de Mw 4.5–5.2 con epicentros alineados a lo largo de la traza de la falla, a profundidades de 8–15 km.',
+  data:[
+    {label:'Tipo de falla', value:'Inversa', unit:'compresión'},
+    {label:'Actividad', value:'Cuaternaria', unit:'reciente'},
+    {label:'Sismos alineados', value:'4', unit:'últimos 30 años'},
+    {label:'Profundidad', value:'8–15 km', unit:'superficial'},
+  ],
+  question:'¿Qué interpretación tectónica es la más coherente con estos datos?',
+  options:[
+    'La falla es inactiva y los sismos son de subducción profunda.',
+    'La falla es activa y cortical; los sismos alineados a su traza, con hipocentros superficiales, indican que la falla está acomodando esfuerzos compresivos en la corteza superior.',
+    'Los sismos son inducidos por minería, no tectónicos.',
+    'La falla es normal y está acomodando extensión cortical.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. La falla es inversa, lo que indica esfuerzos compresivos (coherente con el contexto andino).</span>
+    <span class="step">2. Tiene actividad cuaternaria: es geológicamente joven y potencialmente activa.</span>
+    <span class="step">3. Los 4 sismos están alineados a lo largo de la traza, con hipocentros superficiales (8–15 km).</span>
+    <span class="step">4. Esa alineación y profundidad son típicas de sismicidad cortical asociada a la falla.</span>
+    <span class="step"><strong>Conclusión:</strong> la falla es activa y cortical. Los sismos son superficiales y están asociados a su movimiento. Esto es relevante para el peligro sísmico local en Moyobamba.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 14 · Planificación urbana y sismicidad
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El nuevo distrito de Tarapoto',
+  context:'La municipalidad de Tarapoto planea expandir la ciudad hacia una zona donde se han registrado sismos superficiales (profundidad 5–12 km) asociados a fallas corticales locales. La zona tiene suelos aluviales blandos. Un asesor propone construir sin restricciones, argumentando que "los sismos de San Martín son profundos por subducción y no afectan la superficie".',
+  data:[
+    {label:'Profundidad', value:'5–12 km', unit:'superficial'},
+    {label:'Fallas', value:'Corticales', unit:'locales'},
+    {label:'Suelo', value:'Aluvial blando', unit:'amplifica'},
+    {label:'Magnitud', value:'Mw 4.5–5.5', unit:'moderada'},
+  ],
+  question:'¿Cuál es la recomendación técnica más adecuada para el nuevo distrito?',
+  options:[
+    'Construir sin restricciones, porque los sismos de San Martín son profundos.',
+    'Realizar estudios de microzonificación sísmica, caracterizar suelos y aplicar normas sismorresistentes que consideren la amenaza de fallas corticales superficiales.',
+    'Prohibir toda construcción en la zona.',
+    'Construir solo con madera para reducir el peso.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Los sismos registrados son superficiales (5–12 km), no profundos de subducción.</span>
+    <span class="step">2. Están asociados a fallas corticales locales, capaces de generar sismos moderados pero cercanos.</span>
+    <span class="step">3. Los suelos aluviales blandos amplifican las ondas sísmicas.</span>
+    <span class="step">4. Por lo tanto, la amenaza sísmica local es real y debe ser considerada.</span>
+    <span class="step"><strong>Conclusión:</strong> la recomendación correcta es realizar microzonificación sísmica, caracterizar suelos y aplicar normas sismorresistentes. Prohibir todo o construir solo en madera son respuestas extremas sin fundamento técnico.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 15 · Sismo histórico vs sismo reciente
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'La comparación histórica',
+  context:'En una exposición sobre sismicidad peruana, un ponente afirma: "El sismo de Pisco de 2007 (Mw 7.9, 597 muertos) fue más destructivo que el sismo de Áncash de 1970 (Mw 7.9, ~70 000 muertos), porque la magnitud fue la misma pero la infraestructura era mejor en 2007". Un asistente cuestiona la afirmación.',
+  data:[
+    {label:'Pisco 2007', value:'Mw 7.9', unit:'597 muertos'},
+    {label:'Áncash 1970', value:'Mw 7.9', unit:'~70 000 muertos'},
+    {label:'Diferencia', value:'Aluvión', unit:'Yungay sepultado'},
+  ],
+  question:'¿Cuál es la razón técnica principal por la que Áncash 1970 causó muchas más víctimas?',
+  options:[
+    'Porque el sismo de Áncash tuvo mayor magnitud que el de Pisco.',
+    'Porque en Áncash, además del sismo, ocurrió un aluvión que sepultó la ciudad de Yungay, multiplicando las víctimas.',
+    'Porque la infraestructura en 1970 era mejor que en 2007.',
+    'Porque el sismo de Pisco ocurrió de noche.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Ambos sismos tuvieron magnitud Mw 7.9 (similar tamaño en la fuente).</span>
+    <span class="step">2. La diferencia en víctimas es enorme (597 vs ~70 000).</span>
+    <span class="step">3. En Áncash 1970, el sismo desencadenó un aluvión que sepultó Yungay, causando la mayoría de las muertes.</span>
+    <span class="step">4. La infraestructura y la densidad poblacional también influyen, pero el aluvión fue el factor decisivo.</span>
+    <span class="step"><strong>Conclusión:</strong> la magnitud no es el único factor de destructividad. Los efectos secundarios (aluviones, tsunamis, deslizamientos) y las condiciones locales pueden multiplicar las consecuencias.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 16 · Diseño sismorresistente
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El rascacielos y las ondas superficiales',
+  context:'Un ingeniero diseña un rascacielos de 40 pisos en una ciudad costera. El estudio de suelos indica que el periodo dominante del suelo es de 2.0 s. El análisis de la sismicidad local indica que los sismos de subducción generan ondas superficiales con periodos predominantes entre 1.5 y 3.0 s.',
+  data:[
+    {label:'Altura edificio', value:'40 pisos', unit:'~120 m'},
+    {label:'Periodo del suelo', value:'2.0 s', unit:'dominante'},
+    {label:'Periodo ondas', value:'1.5–3.0 s', unit:'superficiales'},
+  ],
+  question:'¿Qué fenómeno debe evitar especialmente el ingeniero en el diseño?',
+  options:[
+    'El efecto de resonancia: si el periodo de la estructura se acerca al del suelo y las ondas, las amplitudes se amplifican peligrosamente.',
+    'El efecto de licuación del suelo.',
+    'El efecto de tsunami.',
+    'El efecto de viento.'
+  ],
+  correct:0,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Todo suelo y toda estructura tienen un periodo natural de vibración.</span>
+    <span class="step">2. Si el periodo de la estructura se acerca al periodo del suelo y al de las ondas sísmicas, ocurre resonancia.</span>
+    <span class="step">3. En resonancia, las amplitudes se amplifican, generando mayores demandas y posibles daños.</span>
+    <span class="step">4. En este caso, el suelo tiene periodo 2.0 s y las ondas 1.5–3.0 s: hay riesgo de resonancia si la estructura también oscila cerca de esos periodos.</span>
+    <span class="step"><strong>Conclusión:</strong> el ingeniero debe diseñar la estructura para que su periodo natural se aleje del periodo del suelo y de las ondas predominantes, evitando la resonancia.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 17 · Licuación de suelos
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El suelo que se volvió líquido',
+  context:'Tras un sismo de Mw 7.0 en la costa peruana, un puerto presenta asentamientos diferenciales, volcamiento de estructuras y eyección de arena y agua desde el suelo. El suelo del puerto es arena suelta saturada. Un ingeniero afirma que "el sismo fue muy fuerte" y que por eso ocurrió el daño.',
+  data:[
+    {label:'Sismo', value:'Mw 7.0', unit:'costero'},
+    {label:'Suelo', value:'Arena suelta', unit:'saturada'},
+    {label:'Efectos', value:'Asentamientos', unit:'eyección de arena'},
+  ],
+  question:'¿Cuál es el fenómeno geotécnico que explica estos efectos y por qué no es solo "un sismo fuerte"?',
+  options:[
+    'Es un tsunami que afectó el subsuelo.',
+    'Es licuación de suelos: la arena suelta saturada pierde resistencia al aumentar la presión de poros durante el sismo, comportándose como un líquido.',
+    'Es un deslizamiento de tierra superficial.',
+    'Es un asentamiento por consolidación natural.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Los efectos observados (asentamientos, volcamiento, eyección de arena y agua) son típicos de licuación.</span>
+    <span class="step">2. La licuación ocurre en arenas sueltas saturadas durante sismos.</span>
+    <span class="step">3. El sismo aumenta la presión de poros, reduce el esfuerzo efectivo y la arena pierde resistencia al corte.</span>
+    <span class="step">4. El suelo se comporta como un líquido, incapaz de soportar las estructuras.</span>
+    <span class="step"><strong>Conclusión:</strong> no es solo "un sismo fuerte": es una interacción suelo-sismo. La licuación es un riesgo geotécnico que debe evaluarse en zonas costeras con arenas sueltas saturadas.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 18 · Análisis de un enjambre sísmico
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El enjambre de la selva',
+  context:'En una zona de la selva peruana se registran 30 sismos en 3 meses, con magnitudes entre Mw 3.5 y 4.8, profundidades entre 5 y 15 km, y epicentros concentrados en un área de 20 km × 15 km. No hay actividad volcánica cercana. No hay actividad minera ni de hidrocarburos en la zona.',
+  data:[
+    {label:'N° sismos', value:'30', unit:'3 meses'},
+    {label:'Magnitud', value:'Mw 3.5–4.8', unit:'moderada'},
+    {label:'Profundidad', value:'5–15 km', unit:'superficial'},
+    {label:'Área', value:'20×15 km', unit:'concentrada'},
+  ],
+  question:'¿Cuál es la interpretación tectónica más probable de este enjambre sísmico?',
+  options:[
+    'Es sismicidad inducida por actividad humana.',
+    'Es un enjambre asociado a una falla cortical activa que está liberando esfuerzos de manera recurrente en la corteza superior.',
+    'Son sismos de subducción profunda.',
+    'Son réplicas de un sismo mayor no registrado.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Se descarta actividad volcánica (no hay) y actividad humana (no hay minería ni hidrocarburos).</span>
+    <span class="step">2. Los hipocentros son superficiales (5–15 km), lo que indica origen cortical.</span>
+    <span class="step">3. Los epicentros están concentrados en un área pequeña, alineados probablemente con una estructura.</span>
+    <span class="step">4. El patrón es típico de un enjambre asociado a una falla cortical activa.</span>
+    <span class="step"><strong>Conclusión:</strong> la interpretación más probable es actividad de una falla cortical que libera esfuerzos de forma recurrente. Es un caso de sismicidad tectónica superficial, no inducida ni volcánica.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 19 · Comparación de ondas en dos medios
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El núcleo que bloquea las ondas',
+  context:'Un sismólogo analiza registros de una estación ubicada en el hemisferio opuesto al epicentro de un gran sismo. Observa que las ondas P llegan con retraso y las ondas S no se registran en absoluto. Concluye que las ondas S no pudieron atravesar cierta región del interior terrestre.',
+  data:[
+    {label:'Ondas P', value:'Detectadas', unit:'con retraso'},
+    {label:'Ondas S', value:'No detectadas', unit:'ausentes'},
+    {label:'Región', value:'Núcleo externo', unit:'líquido'},
+  ],
+  question:'¿Qué información sobre el interior de la Tierra proporciona la ausencia de ondas S en esa estación?',
+  options:[
+    'Que el núcleo externo es sólido.',
+    'Que el núcleo externo es líquido, ya que las ondas S no se propagan en líquidos por falta de rigidez al corte.',
+    'Que las ondas S se transforman en ondas P.',
+    'Que el sismo fue muy débil para generar ondas S.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. Las ondas S son transversales y solo se propagan en sólidos (requieren rigidez al corte, μ > 0).</span>
+    <span class="step">2. Si no se registran en estaciones ubicadas en el lado opuesto, es porque no pudieron atravesar una región.</span>
+    <span class="step">3. Esa región es el núcleo externo, que se comporta como líquido.</span>
+    <span class="step">4. La ausencia de ondas S (zona de sombra) es una de las principales evidencias del estado líquido del núcleo externo.</span>
+    <span class="step"><strong>Conclusión:</strong> la ausencia de ondas S confirma que el núcleo externo es líquido. Este es un ejemplo clásico de cómo las ondas sísmicas permiten estudiar el interior de la Tierra.</span>`
+},
+
+/* ─────────────────────────────────────────────────────────────
+   CASO 20 · Evaluación de riesgo sísmico regional
+   ───────────────────────────────────────────────────────────── */
+{
+  title:'El mapa de riesgo de San Martín',
+  context:'Un equipo de ingenieros elabora un mapa de riesgo sísmico para San Martín. Integran: (a) sismicidad histórica e instrumental, (b) fallas cartografiadas, (c) profundidad de hipocentros, (d) suelos predominantes, y (e) densidad poblacional. En el mapa final, la zona de mayor riesgo coincide con el sector central y oriental, donde hay sismos superficiales e intermedios, suelos blandos y alta densidad poblacional.',
+  data:[
+    {label:'Sismicidad', value:'Superficial + intermedia', unit:'central/oriente'},
+    {label:'Suelos', value:'Blandos', unit:'aluviales'},
+    {label:'Población', value:'Alta', unit:'urbana'},
+    {label:'Fallas', value:'Moderada', unit:'densidad'},
+  ],
+  question:'¿Por qué la zona central y oriental concentra el mayor riesgo, si el sector suroccidental tiene más fallas cartografiadas?',
+  options:[
+    'Porque las fallas del suroccidental no generan sismos.',
+    'Porque el riesgo sísmico no depende solo de las fallas: integra sismicidad, profundidad, suelos y exposición poblacional. En el centro-oriente coinciden sismos superficiales, suelos blandos y alta densidad poblacional.',
+    'Porque el sector central tiene mayor magnitud sísmica siempre.',
+    'Porque el mapa está mal elaborado.'
+  ],
+  correct:1,
+  explanation:`<strong>Razonamiento:</strong>
+    <span class="step">1. El riesgo sísmico es una combinación de amenaza (sismicidad, fallas, suelos) y vulnerabilidad/exposición (población, infraestructura).</span>
+    <span class="step">2. El sector suroccidental tiene muchas fallas, pero poca sismicidad registrada y probablemente menor exposición.</span>
+    <span class="step">3. El sector central-oriental tiene sismos superficiales e intermedios, suelos blandos y alta densidad poblacional.</span>
+    <span class="step">4. Esa combinación eleva el riesgo, aunque la densidad de fallas sea menor.</span>
+    <span class="step"><strong>Conclusión:</strong> el riesgo no es solo amenaza geológica; también importa dónde vive la gente y cómo son los suelos. La gestión del riesgo debe integrar todos estos factores.</span>`
+}
+
+];
+
+/* ============================================================
+   ESTADO Y LÓGICA
+   ============================================================ */
+let state = [];
+let correctCount = 0;
+let totalChecked = 0;
+
+function initState(){
+  state = cases.map(() => ({ selected: null, checked: false }));
+  correctCount = 0;
+  totalChecked = 0;
+  updateStats();
+}
+
+function renderQuiz(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = cases.map((c, idx) => `
+    <div class="case-card" id="card-${idx}">
+      <div class="case-number">Caso ${String(idx+1).padStart(2,'0')}</div>
+      <div class="case-title">${c.title}</div>
+      <div class="case-context">${c.context}</div>
+      <div class="case-data">
+        ${c.data.map(d => `
+          <div class="data-box">
+            <div class="label">${d.label}</div>
+            <div class="value">${d.value}</div>
+            <div class="unit">${d.unit}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="case-question">${c.question}</div>
+      <div class="options" id="options-${idx}">
+        ${c.options.map((opt, oi) => `
+          <div class="option" data-q="${idx}" data-o="${oi}" onclick="selectOption(${idx}, ${oi})">
+            <span class="radio-circle"></span>
+            <span>${opt}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="feedback" id="fb-${idx}"></div>
+    </div>
+  `).join('');
+}
+
+function selectOption(qIdx, oIdx){
+  const s = state[qIdx];
+  if (s.checked) return;
+  s.selected = oIdx;
+  document.querySelectorAll(`#options-${qIdx} .option`).forEach((el, i) => {
+    el.classList.toggle('selected', i === oIdx);
+  });
+  checkQuestion(qIdx);
+}
+
+function checkQuestion(qIdx){
+  const s = state[qIdx];
+  if (s.checked || s.selected === null) return;
+  s.checked = true;
+
+  const c = cases[qIdx];
+  const optionEls = document.querySelectorAll(`#options-${qIdx} .option`);
+
+  optionEls.forEach((el, i) => {
+    el.classList.add('locked');
+    el.classList.remove('selected');
+    if (i === c.correct) el.classList.add('correct');
+    if (i === s.selected && i !== c.correct) el.classList.add('incorrect');
+  });
+
+  const isCorrect = s.selected === c.correct;
+  const fb = document.getElementById(`fb-${qIdx}`);
+  fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+  fb.innerHTML = `<strong>${isCorrect ? '✔ ¡Razonamiento correcto!' : '✘ Razonamiento incorrecto'}</strong>${c.explanation}`;
+
+  if (isCorrect) correctCount++;
+  totalChecked++;
+
+  updateProgress();
+  updateStats();
+  if (totalChecked === cases.length) showScore();
+}
+
+function updateProgress(){
+  const total = cases.length;
+  const pct = (totalChecked / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent =
+    `${totalChecked} de ${total} casos resueltos · ${correctCount} correctos`;
+}
+
+function updateStats(){
+  const total = cases.length;
+  const pct = totalChecked > 0 ? Math.round((correctCount / totalChecked) * 100) : 0;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statCorrect').textContent = correctCount;
+  document.getElementById('statPct').textContent = pct + '%';
+}
+
+function showScore(){
+  const total = cases.length;
+  const pct = (correctCount / total) * 100;
+
+  document.getElementById('scoreNumber').innerHTML =
+    `${correctCount}<span>/${total}</span>`;
+  document.getElementById('scoreBarFill').style.width = pct + '%';
+
+  let msg = '';
+  if (pct === 100)      msg = '🏆 ¡Perfecto! Tienes un dominio excepcional del razonamiento sísmico.';
+  else if (pct >= 90)   msg = '🥇 Sobresaliente. Tu capacidad de análisis e interpretación es excelente.';
+  else if (pct >= 80)   msg = '🥈 Muy bien. Resuelves la mayoría de los casos con criterio técnico.';
+  else if (pct >= 70)   msg = '🥉 Buen trabajo. Refuerza los casos de cálculo y tectónica.';
+  else if (pct >= 60)   msg = 'Aprobado. Repasa los razonamientos donde fallaste y vuelve a intentarlo.';
+  else if (pct >= 40)   msg = 'Vas por buen camino. Revisa las explicaciones paso a paso.';
+  else                  msg = 'Necesitas repasar el material. ¡No te desanimes, vuelve a intentarlo!';
+
+  document.getElementById('scoreMessage').textContent = msg;
+
+  const panel = document.getElementById('scorePanel');
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetQuiz(){
+  initState();
+  renderQuiz();
+  updateProgress();
+  document.getElementById('scorePanel').classList.remove('show');
+  document.getElementById('scoreBarFill').style.width = '0%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+initState();
+renderQuiz();
+updateProgress();
+</script>
+</body>
+</html>
